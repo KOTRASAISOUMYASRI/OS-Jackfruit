@@ -155,17 +155,15 @@ sudo rmmod monitor
 
 ### 3.5 **Soft-limit Warning**
 
-**Description:** Not fully implemented.
+<img width="767" height="91" alt="image" src="https://github.com/user-attachments/assets/90847ee1-f105-42de-bf7b-da661f193596" />
 
-📸 **[Insert Screenshot Here – Optional]**
 
 ---
 
 ### 3.6 **Hard-limit Enforcement**
 
-**Description:** Not implemented.
+<img width="767" height="75" alt="image" src="https://github.com/user-attachments/assets/52fdf964-c999-4ded-be3c-2582095d899e" />
 
-📸 **[Insert Screenshot Here – Optional]**
 
 ---
 
