@@ -135,7 +135,7 @@ sudo rmmod monitor
 <img width="822" height="168" alt="3 1" src="https://github.com/user-attachments/assets/00768d55-3a6a-4811-ae12-f8bc0cf9069b" />
 
 
-*Show `cat runtime.log` output.*
+*`cat runtime.log` output.*
 
 ---
 
@@ -144,6 +144,9 @@ sudo rmmod monitor
 **Description:** CLI command triggers supervisor, kernel module receives PID via ioctl.
 
 <img width="1060" height="328" alt="n10" src="https://github.com/user-attachments/assets/e97fc44d-eff4-4abf-bacd-02de23e2cc77" />
+
+<img width="811" height="97" alt="n3" src="https://github.com/user-attachments/assets/49c64f9d-8e90-4174-a35b-1a115f8d6ab2" />
+
 
 
 *`engine run` + `dmesg | tail`.*
@@ -184,7 +187,10 @@ sudo rmmod monitor
 
 **Description:** Containers stopped with no zombie processes.
 
-📸 **[Insert Screenshot Here]**
+<img width="918" height="184" alt="2" src="https://github.com/user-attachments/assets/d654b8a6-1496-4c57-96a3-416e7be43ccf" />
+
+
+
 * after this, `ps aux | grep engine` shows no running processes.*
 
 ---
