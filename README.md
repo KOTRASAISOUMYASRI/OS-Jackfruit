@@ -187,8 +187,7 @@ sudo rmmod monitor
 
 **Description:** Containers stopped with no zombie processes.
 
-<img width="918" height="184" alt="2" src="https://github.com/user-attachments/assets/d654b8a6-1496-4c57-96a3-416e7be43ccf" />
-
+<img width="918" height="161" alt="2" src="https://github.com/user-attachments/assets/3f07b0da-859f-4c10-a558-3e7c49028cb4" />
 
 
 * after this, `ps aux | grep engine` shows no running processes.*
