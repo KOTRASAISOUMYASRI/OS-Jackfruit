@@ -1,143 +1,270 @@
-1. Team Information
-Name: <Your Name>
-SRN: <Your SRN>
+# 🧠 Multi-Container Runtime with Kernel Monitoring
 
-(Add more members if applicable)
+---
 
-2. Build, Load, and Run Instructions
-🔹 Environment
-Ubuntu 22.04 / 24.04 VM
-Secure Boot OFF
-Dependencies installed:
+## 1. 👥 Team Information
+
+###Member 1
+* **Name:** KOTRA SAI SOUMYA SRI
+* **SRN:**  PES1UG24CS911
+###Member 2
+* **Name:** TANMAYI NAGABHAIRAVA
+* **SRN:**  PES1UG24CS493
+
+---
+
+## 2. ⚙️ Build, Load, and Run Instructions
+
+### 🔹 Environment Setup
+
+* Ubuntu 22.04 / 24.04 VM
+* Secure Boot OFF
+* Install dependencies:
+
+```bash
 sudo apt update
 sudo apt install -y build-essential linux-headers-$(uname -r)
-🔹 Build
+```
+
+---
+
+### 🔹 Build Project
+
+```bash
 cd boilerplate
 make clean
 make
-🔹 Load Kernel Module
+```
+
+---
+
+### 🔹 Load Kernel Module
+
+```bash
 sudo insmod monitor.ko
 lsmod | grep monitor
-🔹 Run Containers
+```
+
+---
+
+### 🔹 Run Containers
+
+```bash
 sudo ./engine run alpha ./cpu_hog
 sudo ./engine run beta ./cpu_hog
-🔹 List Containers
+```
+
+---
+
+### 🔹 List Containers
+
+```bash
 ./engine list
-🔹 Run Workloads
+```
+
+---
+
+### 🔹 Run Workloads
+
+```bash
 ./cpu_hog
 ./memory_hog
 ./io_pulse
-🔹 Stop Containers
+```
+
+---
+
+### 🔹 Stop Containers
+
+```bash
 ./engine stop alpha
 ./engine stop beta
-🔹 View Logs
+```
+
+---
+
+### 🔹 View Logs
+
+```bash
 cat runtime.log
 dmesg | tail
-🔹 Cleanup
+```
+
+---
+
+### 🔹 Cleanup
+
+```bash
 sudo rmmod monitor
-3. Demo with Screenshots
-3.1 Multi-container Supervision
+```
 
-Description:
-Two or more containers running simultaneously.
+---
 
-📸 [Insert Screenshot Here]
-(Show multiple containers running — cpu_hog, memory_hog, etc.)
+## 3. 📸 Demo with Screenshots
 
-3.2 Metadata Tracking
+---
 
-Description:
-Listing running containers and their PIDs.
+### 3.1 **Multi-container Supervision**
 
-📸 [Insert Screenshot Here]
-(Show ./engine list OR ps -ef | grep hog output)
+**Description:** Two or more containers running simultaneously.
 
-3.3 Logging System
+📸 **[Insert Screenshot Here]**
+<img width="851" height="506" alt="n5" src="https://github.com/user-attachments/assets/e3b97721-eab2-4718-a4ed-2ae7a7fa22eb" />
 
-Description:
-Container lifecycle events recorded in log file.
+*Show multiple containers running (cpu_hog, memory_hog, io_pulse).*
 
-📸 [Insert Screenshot Here]
-(Show cat runtime.log output)
+---
 
-3.4 CLI and IPC
+### 3.2 **Metadata Tracking**
 
-Description:
-CLI command issued and kernel module receives PID via ioctl.
+**Description:** Listing running containers and their PIDs.
 
-📸 [Insert Screenshot Here]
-(Show engine run + dmesg | tail with PID message)
+📸 **[Insert Screenshot Here]**
+*Show `./engine list` or `ps -ef | grep hog`.*
 
-3.5 Soft-limit Warning
+---
 
-Description:
-(Not fully implemented)
+### 3.3 **Logging System**
 
-📸 [Insert Screenshot Here – Optional]
+**Description:** Container lifecycle events recorded in log file.
 
-3.6 Hard-limit Enforcement
+📸 **[Insert Screenshot Here]**
+*Show `cat runtime.log` output.*
 
-Description:
-(Not implemented in this version)
+---
 
-📸 [Insert Screenshot Here – Optional]
+### 3.4 **CLI and IPC**
 
-3.7 Scheduling Experiment
+**Description:** CLI command triggers supervisor, kernel module receives PID via ioctl.
 
-Description:
-Comparison of CPU, memory, and I/O workloads.
+📸 **[Insert Screenshot Here]**
+*Show `engine run` + `dmesg | tail`.*
 
-📸 [Insert Screenshot Here]
-(Show top, free -h, ps outputs)
+---
 
-3.8 Clean Teardown
+### 3.5 **Soft-limit Warning**
 
-Description:
-Containers stopped and no zombie processes remain.
+**Description:** Not fully implemented.
 
-📸 [Insert Screenshot Here]
-(Show ps aux | grep engine after stopping containers)
+📸 **[Insert Screenshot Here – Optional]**
 
-4. Engineering Analysis
-Linux uses namespaces (CLONE_NEWPID, CLONE_NEWUTS, CLONE_NEWNS) to isolate processes.
-chroot() provides filesystem isolation for containers.
-Kernel modules operate in privileged mode and can monitor system-level events.
-ioctl enables communication between user-space and kernel-space.
-Linux scheduler distributes CPU time among processes based on workload type.
-5. Design Decisions and Tradeoffs
-🔹 Namespace Isolation
-Choice: Used clone() with namespaces
-Tradeoff: Limited isolation compared to full container runtimes
-Reason: Simpler implementation suitable for project scope
-🔹 Supervisor Architecture
-Choice: Simple CLI-based supervisor
-Tradeoff: No persistent state across runs
-Reason: Reduced complexity
-🔹 IPC and Logging
-Choice: Used ioctl + file logging
-Tradeoff: Minimal communication features
-Reason: Lightweight and easy to debug
-🔹 Kernel Monitor
-Choice: Basic kernel module tracking PIDs
-Tradeoff: No deep memory enforcement
-Reason: Focus on integration rather than complexity
-🔹 Scheduling Experiments
-Choice: Used CPU, memory, and I/O workloads
-Tradeoff: No advanced metrics collection
-Reason: Demonstrates observable behavior clearly
-6. Scheduler Experiment Results
-🔹 Observations
-Workload	Behavior
-CPU Hog	High CPU usage, continuous execution
-Memory Hog	Increased RAM usage
-IO Pulse	Intermittent CPU + I/O activity
-🔹 Analysis
-CPU-bound processes dominate CPU usage
-Memory-heavy processes increase system load
-I/O-bound processes show burst behavior
-Scheduler balances resources among processes
-🎯 Conclusion
-Implemented a basic container runtime in C
-Demonstrated process isolation using Linux primitives
-Integrated kernel module with user-space runtime
-Observed scheduling behavior using workloads
+---
+
+### 3.6 **Hard-limit Enforcement**
+
+**Description:** Not implemented.
+
+📸 **[Insert Screenshot Here – Optional]**
+
+---
+
+### 3.7 **Scheduling Experiment**
+
+**Description:** CPU, memory, and I/O workloads comparison.
+
+📸 **[Insert Screenshot Here]**
+*Show `top`, `free -h`, `ps` outputs.*
+
+---
+
+### 3.8 **Clean Teardown**
+
+**Description:** Containers stopped with no zombie processes.
+
+📸 **[Insert Screenshot Here]**
+*Show `ps aux | grep engine`.*
+
+---
+
+## 4. 🧠 Engineering Analysis
+
+* Linux namespaces (`CLONE_NEWPID`, `CLONE_NEWUTS`, `CLONE_NEWNS`) provide process isolation.
+* `chroot()` enables filesystem isolation inside containers.
+* Kernel modules operate in privileged mode for system monitoring.
+* `ioctl` is used for communication between user-space and kernel-space.
+* Linux scheduler allocates CPU based on workload behavior.
+
+---
+
+## 5. ⚖️ Design Decisions and Tradeoffs
+
+### 🔹 Namespace Isolation
+
+* **Choice:** Used `clone()` with namespaces
+* **Tradeoff:** Limited compared to full container runtimes
+* **Reason:** Simpler implementation
+
+---
+
+### 🔹 Supervisor Architecture
+
+* **Choice:** CLI-based supervisor
+* **Tradeoff:** No persistent state
+* **Reason:** Reduced complexity
+
+---
+
+### 🔹 IPC and Logging
+
+* **Choice:** `ioctl` + file logging
+* **Tradeoff:** Minimal communication features
+* **Reason:** Lightweight
+
+---
+
+### 🔹 Kernel Monitor
+
+* **Choice:** Basic PID tracking
+* **Tradeoff:** No memory enforcement
+* **Reason:** Focus on integration
+
+---
+
+### 🔹 Scheduling Experiments
+
+* **Choice:** CPU, memory, I/O workloads
+* **Tradeoff:** No detailed metrics
+* **Reason:** Clear observable behavior
+
+---
+
+## 6. 📊 Scheduler Experiment Results
+
+### 🔹 Observations
+
+| Workload   | Behavior              |
+| ---------- | --------------------- |
+| CPU Hog    | High CPU usage        |
+| Memory Hog | High memory usage     |
+| IO Pulse   | Intermittent activity |
+
+---
+
+### 🔹 Analysis
+
+* CPU-bound processes dominate CPU time
+* Memory-heavy processes increase RAM usage
+* I/O workloads show burst patterns
+* Scheduler balances processes dynamically
+
+---
+
+## 🎯 Conclusion
+
+* Built a basic container runtime using C
+* Achieved process isolation using Linux primitives
+* Integrated kernel module with user-space runtime
+* Demonstrated scheduling behavior using workloads
+
+---
+
+## 📌 Notes
+
+* Replace `<Your Name>` and `<Your SRN>`
+* Add screenshots in `/images` folder:
+
+```md
+![Example](images/screenshot1.png)
+```
+
+---
