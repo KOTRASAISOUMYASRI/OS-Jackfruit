@@ -110,7 +110,7 @@ sudo rmmod monitor
 
 **Description:** Two or more containers running simultaneously.
 
-<img src="images/1.png" width="800"/>
+<img src="images/1.png" width="1000"/>
 
 
 *multiple containers running (cpu_hog, memory_hog, io_pulse).*
@@ -121,7 +121,7 @@ sudo rmmod monitor
 
 **Description:** Listing running containers and their PIDs.
 
-<img width="788" height="135" alt="n4" src="https://github.com/user-attachments/assets/b19288c9-516d-401b-8684-6616ac6b22ff" />
+<img src="images/2.png" width="1000"/>
 
 
 *`./engine list` or `ps -ef | grep hog`.*
@@ -132,7 +132,7 @@ sudo rmmod monitor
 
 **Description:** Container lifecycle events recorded in log file.
 
-<img width="822" height="168" alt="3 1" src="https://github.com/user-attachments/assets/00768d55-3a6a-4811-ae12-f8bc0cf9069b" />
+<img src="images/3.png" width="1000"/>
 
 
 *`cat runtime.log` output.*
@@ -143,10 +143,9 @@ sudo rmmod monitor
 
 **Description:** CLI command triggers supervisor, kernel module receives PID via ioctl.
 
-<img width="1060" height="328" alt="n10" src="https://github.com/user-attachments/assets/e97fc44d-eff4-4abf-bacd-02de23e2cc77" />
+<img src="images/4.png" width="1000"/>
 
-<img width="811" height="97" alt="n3" src="https://github.com/user-attachments/assets/49c64f9d-8e90-4174-a35b-1a115f8d6ab2" />
-
+<img src="images/5.png" width="1000"/>
 
 
 *CLI command is issued from user-space, and the kernel module receives the process information via ioctl, demonstrating interaction between user-space and kernel-space.*
@@ -157,8 +156,7 @@ sudo rmmod monitor
 
 **Description:** Warning generated when memory usage crosses a defined threshold.
 
-<img width="767" height="91" alt="image" src="https://github.com/user-attachments/assets/90847ee1-f105-42de-bf7b-da661f193596" />
-
+<img src="images/6.png" width="1000"/>
 
 *Soft limit warning shown in runtime logs.*
 
@@ -168,7 +166,7 @@ sudo rmmod monitor
 
 **Description:** Container termination when usage exceeds maximum threshold.
 
-<img width="767" height="75" alt="image" src="https://github.com/user-attachments/assets/52fdf964-c999-4ded-be3c-2582095d899e" />
+<img src="images/7.png" width="1000"/>
 
 
 *Container kill message shown in logs.*
@@ -179,11 +177,9 @@ sudo rmmod monitor
 
 **Description:** CPU, memory, and I/O workloads comparison.
 
-<img width="1049" height="651" alt="n6" src="https://github.com/user-attachments/assets/574977c8-4c37-493b-bf16-400a3dd31aa6" />
+<img src="images/8.png" width="1000"/>
 
-
-<img width="808" height="133" alt="n9" src="https://github.com/user-attachments/assets/686e336d-501d-4199-a2b9-61e91030aae3" />
-
+<img src="images/9.png" width="1000"/>
 
 *`top`, `free -h`, `ps` outputs.*
 
@@ -193,8 +189,7 @@ sudo rmmod monitor
 
 **Description:** Containers stopped with no zombie processes.
 
-<img width="918" height="161" alt="2" src="https://github.com/user-attachments/assets/3f07b0da-859f-4c10-a558-3e7c49028cb4" />
-
+<img src="images/10.png" width="1000"/>
 
 *After stopping containers, `ps aux | grep engine` shows no running processes.*
 
