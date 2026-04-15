@@ -25,57 +25,47 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#include <errno.h>
 #include <sys/mount.h>
-#include <sys/syscall.h>
 #include <sys/utsname.h>
 
 #define STACK_SIZE (1024 * 1024)
 
-/* container stack (must be aligned properly for clone) */
-static char container_stack[STACK_SIZE];
+char container_stack[STACK_SIZE];
 
-/* IOCTL */
+/* IOCTL COMMAND */
 #define IOCTL_MONITOR_PID _IOW('a', 'a', int)
 
 /* ================= LOGGING ================= */
 void log_event(const char *message) {
     FILE *f = fopen("runtime.log", "a");
-    if (!f) return;
-
+    if (f == NULL) {
+        perror("log file error");
+        return;
+    }
     fprintf(f, "%s\n", message);
     fclose(f);
 }
 
-/* ================= CHILD PROCESS ================= */
+/* ================= CHILD ================= */
 int child_func(void *arg) {
     char **argv = (char **)arg;
 
-    printf("[container] started\n");
+    printf("Inside container!\n");
 
-    /* hostname isolation */
-    if (sethostname("container", 10) < 0) {
-        perror("sethostname");
-        log_event("ERROR: sethostname failed");
-    }
+    sethostname("container", 10);
 
-    /* mount proc for container visibility */
-    mount("proc", "/proc", "proc", 0, NULL);
-
-    /* chroot */
     if (chroot("rootfs-alpha") != 0) {
         perror("chroot failed");
         log_event("ERROR: chroot failed");
-        return 1;
+        exit(1);
     }
 
     chdir("/");
 
-    /* execute program */
     execvp(argv[0], argv);
 
-    perror("execvp failed");
-    log_event("ERROR: execvp failed");
+    perror("exec failed");
+    log_event("ERROR: exec failed");
 
     return 1;
 }
@@ -93,31 +83,21 @@ int main(int argc, char *argv[]) {
 
     /* ================= RUN ================= */
     if (strcmp(argv[1], "run") == 0) {
-
         if (argc < 4) {
             printf("Usage: %s run <name> <program>\n", argv[0]);
             return 1;
         }
 
-        char *name = argv[2];
-        char *program = argv[3];
+        printf("Starting container: %s\n", argv[2]);
 
-        printf("[engine] starting container: %s\n", name);
+        char *child_args[] = { argv[3], NULL };
 
-        char *child_args[] = { program, NULL };
+        int flags = CLONE_NEWUTS | CLONE_NEWPID | CLONE_NEWNS;
 
-        /* clone flags = isolated container */
-        int flags =
-            CLONE_NEWPID |
-            CLONE_NEWUTS |
-            CLONE_NEWNS |
-            CLONE_NEWIPC |
-            SIGCHLD;
-
-        pid_t pid = clone(child_func,
-                          container_stack + STACK_SIZE,
-                          flags,
-                          child_args);
+        int pid = clone(child_func,
+                        container_stack + STACK_SIZE,
+                        flags | SIGCHLD,
+                        child_args);
 
         if (pid < 0) {
             perror("clone failed");
@@ -125,54 +105,41 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        printf("[engine] container '%s' PID: %d\n", name, pid);
+        printf("Container %s started with PID %d\n", argv[2], pid);
 
-        /* send PID to kernel monitor */
+        /* SEND PID TO KERNEL */
         int fd = open("/dev/monitor", O_RDWR);
         if (fd >= 0) {
-            if (ioctl(fd, IOCTL_MONITOR_PID, &pid) < 0) {
-                perror("ioctl failed");
-            }
+            ioctl(fd, IOCTL_MONITOR_PID, &pid);
             close(fd);
         }
 
-        char log_msg[256];
-        snprintf(log_msg, sizeof(log_msg),
-                 "START container=%s pid=%d program=%s",
-                 name, pid, program);
-
+        char log_msg[200];
+        sprintf(log_msg, "START: Container=%s PID=%d", argv[2], pid);
         log_event(log_msg);
     }
 
     /* ================= LIST ================= */
     else if (strcmp(argv[1], "list") == 0) {
-
-        printf("[engine] active containers (heuristic):\n");
-
-        /* better than grep hack: show clone-based processes */
-        system("ps -eo pid,cmd | grep -E 'container|rootfs' | grep -v grep");
+        printf("Running containers:\n");
+        system("ps -ef | grep hog | grep -v grep");
     }
 
     /* ================= STOP ================= */
     else if (strcmp(argv[1], "stop") == 0) {
-
         if (argc < 3) {
             printf("Usage: %s stop <name>\n", argv[0]);
             return 1;
         }
 
-        char cmd[128];
-        snprintf(cmd, sizeof(cmd),
-                 "pkill -f %s", argv[2]);
+        char command[100];
+        sprintf(command, "pkill -f %s", argv[2]);
+        system(command);
 
-        system(cmd);
+        printf("Stopped container: %s\n", argv[2]);
 
-        printf("[engine] stopped container: %s\n", argv[2]);
-
-        char log_msg[256];
-        snprintf(log_msg, sizeof(log_msg),
-                 "STOP container=%s", argv[2]);
-
+        char log_msg[200];
+        sprintf(log_msg, "STOP: Container=%s", argv[2]);
         log_event(log_msg);
     }
 
