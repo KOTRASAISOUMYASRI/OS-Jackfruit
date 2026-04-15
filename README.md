@@ -110,7 +110,7 @@ sudo rmmod monitor
 
 **Description:** Two or more containers running simultaneously.
 
-<img width="851" height="506" alt="n5" src="https://github.com/user-attachments/assets/e3b97721-eab2-4718-a4ed-2ae7a7fa22eb" />
+<img src="images/1.png" width="800"/>
 
 
 *multiple containers running (cpu_hog, memory_hog, io_pulse).*
