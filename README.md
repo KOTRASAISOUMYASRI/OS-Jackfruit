@@ -43,10 +43,34 @@ Linux Kernel
         ↓
 Container Processes (cpu_hog, memory_hog, io_pulse)
 ```
+┌──────────────────────────────┐
+│        USER COMMAND LAYER     │
+│ (CLI / input parser / UI)    │
+└────────────┬─────────────────┘
+             ↓
+┌──────────────────────────────┐
+│        KERNEL ENGINE          │
+│  - Scheduler                 │
+│  - Process Manager           │
+│  - System Controller         │
+└────────────┬─────────────────┘
+             ↓
+┌──────────────────────────────┐
+│     RESOURCE MANAGEMENT       │
+│  - Memory Manager            │
+│  - CPU Simulation            │
+│  - I/O Handler               │
+└────────────┬─────────────────┘
+             ↓
+┌──────────────────────────────┐
+│        LOGGING LAYER          │
+│  - Event logs                │
+│  - State tracking            │
+└──────────────────────────────┘
 
 ---
 
-## 4. ⚙️ Build, Load, and Run Instructions
+## 4. Build, Load, and Run Instructions
 
 ### Environment Setup
 
