@@ -25,14 +25,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <sys/mount.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/un.h>
 #include <sys/wait.h>
-#include <time.h>
 #include <unistd.h>
+
+#include "monitor_ioctl.h"
 
 #define STACK_SIZE (1024 * 1024)
 #define CONTROL_PATH "/tmp/mini_runtime.sock"
@@ -42,21 +44,21 @@
 
 /* ================= STRUCTS ================= */
 
-typedef enum {
-    CMD_START, CMD_PS, CMD_STOP
-} command_kind_t;
+typedef enum { CMD_START, CMD_PS, CMD_STOP } command_kind_t;
 
 typedef struct {
     command_kind_t kind;
     char id[32];
     char rootfs[128];
     char command[128];
+    unsigned long soft;
+    unsigned long hard;
 } control_request_t;
 
-typedef struct {
+typedef struct container {
     char id[32];
     pid_t pid;
-    char log_path[PATH_MAX];
+    int pipe_fd;
     struct container *next;
 } container_t;
 
@@ -77,8 +79,8 @@ typedef struct {
 
 container_t *head = NULL;
 pthread_mutex_t container_lock;
-
 buffer_t buf;
+int monitor_fd;
 
 /* ================= BUFFER ================= */
 
@@ -89,16 +91,9 @@ void buffer_init(buffer_t *b) {
     pthread_cond_init(&b->not_full, NULL);
 }
 
-void buffer_shutdown(buffer_t *b) {
-    pthread_mutex_lock(&b->lock);
-    b->shutdown = 1;
-    pthread_cond_broadcast(&b->not_empty);
-    pthread_cond_broadcast(&b->not_full);
-    pthread_mutex_unlock(&b->lock);
-}
-
 int buffer_push(buffer_t *b, log_item_t *item) {
     pthread_mutex_lock(&b->lock);
+
     while (b->count == LOG_BUFFER_CAPACITY && !b->shutdown)
         pthread_cond_wait(&b->not_full, &b->lock);
 
@@ -118,6 +113,7 @@ int buffer_push(buffer_t *b, log_item_t *item) {
 
 int buffer_pop(buffer_t *b, log_item_t *item) {
     pthread_mutex_lock(&b->lock);
+
     while (b->count == 0 && !b->shutdown)
         pthread_cond_wait(&b->not_empty, &b->lock);
 
@@ -135,11 +131,10 @@ int buffer_pop(buffer_t *b, log_item_t *item) {
     return 0;
 }
 
-/* ================= LOGGING ================= */
+/* ================= LOGGER ================= */
 
 void *logger(void *arg) {
     log_item_t item;
-
     mkdir(LOG_DIR, 0777);
 
     while (buffer_pop(&buf, &item) == 0) {
@@ -157,28 +152,45 @@ void *logger(void *arg) {
 
 /* ================= CHILD ================= */
 
+typedef struct {
+    char command[128];
+    char rootfs[128];
+    int write_fd;
+} child_args_t;
+
 int child_fn(void *arg) {
-    char **cmd = (char **)arg;
+    child_args_t *cfg = (child_args_t *)arg;
+
+    dup2(cfg->write_fd, STDOUT_FILENO);
+    dup2(cfg->write_fd, STDERR_FILENO);
+    close(cfg->write_fd);
 
     sethostname("container", 10);
-    chroot("rootfs");   // simplified
+
+    if (chroot(cfg->rootfs) != 0) {
+        perror("chroot");
+        exit(1);
+    }
+
     chdir("/");
     mount("proc", "/proc", "proc", 0, NULL);
 
+    char *cmd[] = {cfg->command, NULL};
     execvp(cmd[0], cmd);
+
     perror("exec");
     return 1;
 }
 
-/* ================= CONTAINER ================= */
+/* ================= CONTAINERS ================= */
 
-void add_container(char *id, pid_t pid) {
+void add_container(char *id, pid_t pid, int pipe_fd) {
     pthread_mutex_lock(&container_lock);
 
     container_t *c = malloc(sizeof(container_t));
     strcpy(c->id, id);
     c->pid = pid;
-
+    c->pipe_fd = pipe_fd;
     c->next = head;
     head = c;
 
@@ -195,6 +207,48 @@ container_t* find_container(char *id) {
     return NULL;
 }
 
+/* ================= PIPE READER ================= */
+
+void *pipe_reader(void *arg) {
+    container_t *c = (container_t *)arg;
+    char buf_local[LOG_CHUNK_SIZE];
+
+    while (1) {
+        ssize_t n = read(c->pipe_fd, buf_local, sizeof(buf_local));
+        if (n <= 0) break;
+
+        log_item_t item;
+        strcpy(item.id, c->id);
+        item.len = n;
+        memcpy(item.data, buf_local, n);
+
+        buffer_push(&buf, &item);
+    }
+
+    close(c->pipe_fd);
+    return NULL;
+}
+
+/* ================= SIGNAL ================= */
+
+void sigchld_handler(int sig) {
+    (void)sig;
+    while (waitpid(-1, NULL, WNOHANG) > 0);
+}
+
+/* ================= MONITOR ================= */
+
+void register_monitor(char *id, pid_t pid, unsigned long soft, unsigned long hard) {
+    struct monitor_request req;
+
+    req.pid = pid;
+    req.soft_limit_bytes = soft;
+    req.hard_limit_bytes = hard;
+    strncpy(req.container_id, id, 31);
+
+    ioctl(monitor_fd, MONITOR_REGISTER, &req);
+}
+
 /* ================= SUPERVISOR ================= */
 
 void run_supervisor() {
@@ -202,12 +256,17 @@ void run_supervisor() {
     struct sockaddr_un addr;
     pthread_t log_thread;
 
+    signal(SIGCHLD, sigchld_handler);
+
+    monitor_fd = open("/dev/container_monitor", O_RDWR);
+
     buffer_init(&buf);
     pthread_create(&log_thread, NULL, logger, NULL);
 
     unlink(CONTROL_PATH);
 
     server_fd = socket(AF_UNIX, SOCK_STREAM, 0);
+
     addr.sun_family = AF_UNIX;
     strcpy(addr.sun_path, CONTROL_PATH);
 
@@ -223,15 +282,31 @@ void run_supervisor() {
         read(client_fd, &req, sizeof(req));
 
         if (req.kind == CMD_START) {
-            char *args[] = {req.command, NULL};
 
-            char stack[STACK_SIZE];
+            int pipefd[2];
+            pipe(pipefd);
+
+            child_args_t *args = malloc(sizeof(child_args_t));
+            strcpy(args->command, req.command);
+            strcpy(args->rootfs, req.rootfs);
+            args->write_fd = pipefd[1];
+
+            char *stack = malloc(STACK_SIZE);
+
             int pid = clone(child_fn,
                             stack + STACK_SIZE,
                             CLONE_NEWPID | CLONE_NEWUTS | CLONE_NEWNS | SIGCHLD,
                             args);
 
-            add_container(req.id, pid);
+            close(pipefd[1]);
+
+            add_container(req.id, pid, pipefd[0]);
+
+            pthread_t t;
+            pthread_create(&t, NULL, pipe_reader, find_container(req.id));
+
+            register_monitor(req.id, pid, req.soft, req.hard);
+
             write(client_fd, "Started\n", 8);
         }
 
@@ -292,8 +367,14 @@ int main(int argc, char *argv[]) {
 
     else if (!strcmp(argv[1], "start")) {
         control_request_t req = {CMD_START};
+
         strcpy(req.id, argv[2]);
-        strcpy(req.command, argv[3]);
+        strcpy(req.rootfs, argv[3]);
+        strcpy(req.command, argv[4]);
+
+        req.soft = 20UL << 20; // 20MB
+        req.hard = 40UL << 20; // 40MB
+
         send_req(&req);
     }
 
