@@ -1,4 +1,4 @@
-# Multi-Container Runtime with Kernel Monitoring
+# Multi-Container Runtime with Kernel-Level Monitoring
 
 ---
 
@@ -43,7 +43,7 @@ Linux Kernel
         ↓
 Container Processes (cpu_hog, memory_hog, io_pulse)
 ```
-<img width="472" height="898" alt="diagram" src="https://github.com/user-attachments/assets/2286bfb2-c4d5-4e82-b662-0b312f6b5c4d" />
+<img width="737" height="954" alt="diagram" src="https://github.com/user-attachments/assets/d0005139-1f9c-4d39-9e06-d3e20e5e74a9" />
 
 
 ---
@@ -218,7 +218,18 @@ Containers stopped without leaving zombie processes.
 
 ---
 
-## 6. Engineering Analysis
+## 6. Concepts Used
+
+| Module          | Concept           |
+| --------------- | ----------------- |
+| engine.c        | Kernel            |
+| monitor.c       | Kernel module     |
+| workloads       | Processes         |
+| scheduler       | CPU scheduling    |
+| memory handling | Memory management |
+
+
+## 7. Engineering Analysis
 
 * Linux namespaces (`CLONE_NEWPID`, `CLONE_NEWUTS`, `CLONE_NEWNS`) isolate containers
 * `chroot()` provides filesystem isolation
@@ -228,7 +239,7 @@ Containers stopped without leaving zombie processes.
 
 ---
 
-## 7. Design Decisions and Tradeoffs
+## 8. Design Decisions and Tradeoffs
 
 ### Namespace Isolation
 
@@ -262,7 +273,7 @@ Containers stopped without leaving zombie processes.
 
 ---
 
-## 8. Scheduler Experiment Results
+## 9. Scheduler Experiment Results
 
 ### Observations
 
