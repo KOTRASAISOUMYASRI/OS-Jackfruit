@@ -43,30 +43,9 @@ Linux Kernel
         ↓
 Container Processes (cpu_hog, memory_hog, io_pulse)
 ```
-┌──────────────────────────────┐
-│      USER COMMAND LAYER      │
-│  (CLI / Input Parser / UI)   │
-└────────────┬─────────────────┘
-             ↓
-┌──────────────────────────────┐
-│        KERNEL ENGINE         │
-│  - Scheduler                │
-│  - Process Manager          │
-│  - System Controller        │
-└────────────┬─────────────────┘
-             ↓
-┌──────────────────────────────┐
-│     RESOURCE MANAGEMENT      │
-│  - Memory Manager           │
-│  - CPU Simulation           │
-│  - I/O Handler              │
-└────────────┬─────────────────┘
-             ↓
-┌──────────────────────────────┐
-│        LOGGING LAYER         │
-│  - Event Logs               │
-│  - State Tracking           │
-└──────────────────────────────┘
+<img width="472" height="898" alt="mermaid-diagram" src="https://github.com/user-attachments/assets/2286bfb2-c4d5-4e82-b662-0b312f6b5c4d" />
+
+
 ---
 
 ## 4. Build, Load, and Run Instructions
