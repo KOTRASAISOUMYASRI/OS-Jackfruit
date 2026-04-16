@@ -43,7 +43,7 @@ Linux Kernel
         ↓
 Container Processes (cpu_hog, memory_hog, io_pulse)
 ```
-<img width="472" height="898" alt="mermaid-diagram" src="https://github.com/user-attachments/assets/2286bfb2-c4d5-4e82-b662-0b312f6b5c4d" />
+<img width="472" height="898" alt="diagram" src="https://github.com/user-attachments/assets/2286bfb2-c4d5-4e82-b662-0b312f6b5c4d" />
 
 
 ---
